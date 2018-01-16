@@ -5,11 +5,13 @@ import cv2
 
 class DistanceDetector:
     x1 = 66
-    x2 = 760 + x1
-    y1 = 450
-    y2 = 800 + y1
-
+    x2 = 540 + x1
+    y1 = 400
+    y2 = 600 + y1
+    def __init__(self):
+        self.step = 0
     def screen_shoot(self):
+
         im = pyscreenshot.grab(bbox=(self.x1, self.y1, self.x2, self.y2))
         self.im = np.array(im)
         self.im_gray = cv2.cvtColor(self.im, cv2.COLOR_BGR2GRAY)
@@ -22,10 +24,10 @@ class DistanceDetector:
 
     def foot_detection(self):
         circles = cv2.HoughCircles(self.im_gray,cv2.HOUGH_GRADIENT,1.2,100,
-                                    param1=50,param2=20,minRadius=20,maxRadius=25)
+                                   param1=50, param2=20, minRadius=15, maxRadius=20)
         head = circles[0][0]
         self.foot = head
-        self.foot[1] += 114
+        self.foot[1] += 78
         #cv2.circle(im, (foot[0], foot[1]), 2, (0, 0, 255), 3)
 
     def is_background(self, color):
@@ -50,11 +52,11 @@ class DistanceDetector:
 
     def find_left_right_point(self, im, first_point, foot):
         y_top, x_top = first_point
-        x_range_left = range(x_top, max(int(foot[0]), x_top - 300), -1) if foot[1] < x_top else \
-            range(x_top, x_top - 300, -1)
-        x_range_right = range(x_top, min(int(foot[0]), x_top + 300)) if foot[1] > x_top else \
-            range(x_top, min(x_top + 300, im.shape[1] - 1))
-        y_range = range(y_top, y_top + 300)
+        x_range_left = range(x_top, max(int(foot[0]), x_top - 100), -1) if foot[1] < x_top else \
+            range(x_top, x_top - 100, -1)
+        x_range_right = range(x_top, min(int(foot[0]), x_top + 100)) if foot[1] > x_top else \
+            range(x_top, min(x_top + 100, im.shape[1] - 1))
+        y_range = range(y_top, y_top + 200)
         sim_colors = []
         for y in y_range:
             if self.is_background(im[y][x_top]):
@@ -82,7 +84,11 @@ class DistanceDetector:
 
     def get_distance(self):
         return np.math.hypot(self.foot[0] - self.center[0], self.foot[1] - self.center[1])
-
+    def save_im(self):
+        self.step +=1
+        cv2.circle(self.im, (self.foot[0], self.foot[1]), 2, (0, 0, 255), 3)
+        cv2.circle(self.im, self.center, 2, (0, 0, 255), 3)
+        cv2.imwrite('step_'+str(self.step)+'.png', self.im)
 
 '''
 cv2.circle(im, (first_point[1], another_point[0]), 2, (0, 0, 255), 3)
